@@ -1,0 +1,51 @@
+---
+description: Verdict project rules for all agents in this repo
+alwaysApply: true
+---
+
+# Verdict — Cursor Rules
+
+This is the short version. Always read SPEC.md and CLAUDE.md in the repo root
+for full context.
+
+## Stack
+Rust + Axum + Tokio + SQLx + Postgres 16 (backend).
+Apalis + Redis (background jobs).
+Next.js 15 App Router + TypeScript strict + Tailwind + shadcn/ui + Recharts.
+Clerk for auth (JWT verification on backend).
+Anthropic API for LLM ingestion.
+Fly.io (Rust) + Vercel (Next.js).
+
+## Hard rules
+- No `unwrap` or `expect` outside tests. Use `?` and `thiserror`.
+- No raw SQL. SQLx `query!` / `query_as!` macros only.
+- No `Arc<Mutex<...>>` without a comment justifying it.
+- Probabilities are `rust_decimal::Decimal`, stored as `numeric(5,4)`.
+  Never `f64` for stored probability values.
+- Validate every external input: request bodies, LLM outputs, query params.
+- Tests live alongside source.
+
+## Workflow gates
+Before declaring any task complete:
+- `cargo check` clean
+- `cargo clippy -- -D warnings` clean
+- `cargo test` passes
+- `cargo fmt` applied
+- Frontend: `pnpm typecheck && pnpm lint && pnpm test`
+
+## Author is new to Rust
+Explain non-obvious idioms inline with a one-sentence comment.
+Prefer clarity over cleverness.
+Surface borrow-checker workarounds rather than hiding them.
+
+## Out of scope (do not propose, do not build)
+Multi-tenant, notifications, mobile app, non-FDA event categories,
+"AI probability suggestions," real-time / WebSockets, native PDF rendering.
+
+## Phases
+P1: spine (Rust+TS demo with manual data and calibration).
+P2: LLM ingestion of FDA briefing PDFs.
+P3: Polymarket / Kalshi market price comparison.
+P4: polish (optional).
+
+PR titles start with the phase tag.
