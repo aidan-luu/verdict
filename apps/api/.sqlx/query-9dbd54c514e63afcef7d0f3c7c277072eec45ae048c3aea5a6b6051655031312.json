@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO events (\n            title,\n            kind,\n            drug_name,\n            sponsor,\n            indication,\n            decision_date,\n            advisory_committee_date,\n            primary_endpoint,\n            advisory_committee_vote,\n            status\n        )\n        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, $6, $7, $8, 'upcoming')\n        RETURNING\n            id,\n            title,\n            kind,\n            drug_name,\n            sponsor,\n            indication,\n            decision_date,\n            advisory_committee_date,\n            primary_endpoint,\n            advisory_committee_vote,\n            status\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "drug_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "sponsor",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "indication",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "decision_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 7,
+        "name": "advisory_committee_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 8,
+        "name": "primary_endpoint",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "advisory_committee_vote",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Date",
+        "Date",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "9dbd54c514e63afcef7d0f3c7c277072eec45ae048c3aea5a6b6051655031312"
+}

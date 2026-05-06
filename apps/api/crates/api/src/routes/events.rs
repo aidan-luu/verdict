@@ -22,6 +22,11 @@ pub struct CreateEventRequest {
     #[validate(length(min = 1))]
     pub indication: String,
     pub decision_date: NaiveDate,
+    pub advisory_committee_date: Option<NaiveDate>,
+    #[validate(length(min = 1))]
+    pub primary_endpoint: Option<String>,
+    #[validate(length(min = 1))]
+    pub advisory_committee_vote: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -52,6 +57,9 @@ pub struct EventResponse {
     pub sponsor: String,
     pub indication: String,
     pub decision_date: NaiveDate,
+    pub advisory_committee_date: Option<NaiveDate>,
+    pub primary_endpoint: Option<String>,
+    pub advisory_committee_vote: Option<String>,
     pub status: String,
 }
 
@@ -84,15 +92,40 @@ pub async fn create_event_handler(
     let event = sqlx::query_as!(
         EventResponse,
         r#"
-        INSERT INTO events (title, kind, drug_name, sponsor, indication, decision_date, status)
-        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, 'upcoming')
-        RETURNING id, title, kind, drug_name, sponsor, indication, decision_date, status
+        INSERT INTO events (
+            title,
+            kind,
+            drug_name,
+            sponsor,
+            indication,
+            decision_date,
+            advisory_committee_date,
+            primary_endpoint,
+            advisory_committee_vote,
+            status
+        )
+        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, $6, $7, $8, 'upcoming')
+        RETURNING
+            id,
+            title,
+            kind,
+            drug_name,
+            sponsor,
+            indication,
+            decision_date,
+            advisory_committee_date,
+            primary_endpoint,
+            advisory_committee_vote,
+            status
         "#,
         payload.title,
         payload.drug_name,
         payload.sponsor,
         payload.indication,
-        payload.decision_date
+        payload.decision_date,
+        payload.advisory_committee_date,
+        payload.primary_endpoint,
+        payload.advisory_committee_vote
     )
     .fetch_one(&state.pool)
     .await?;
@@ -155,7 +188,18 @@ pub async fn list_events_handler(
         let events = sqlx::query_as!(
             EventResponse,
             r#"
-            SELECT id, title, kind, drug_name, sponsor, indication, decision_date, status
+            SELECT
+                id,
+                title,
+                kind,
+                drug_name,
+                sponsor,
+                indication,
+                decision_date,
+                advisory_committee_date,
+                primary_endpoint,
+                advisory_committee_vote,
+                status
             FROM events
             WHERE status = $1
             ORDER BY decision_date ASC
@@ -171,7 +215,18 @@ pub async fn list_events_handler(
     let events = sqlx::query_as!(
         EventResponse,
         r#"
-        SELECT id, title, kind, drug_name, sponsor, indication, decision_date, status
+        SELECT
+            id,
+            title,
+            kind,
+            drug_name,
+            sponsor,
+            indication,
+            decision_date,
+            advisory_committee_date,
+            primary_endpoint,
+            advisory_committee_vote,
+            status
         FROM events
         ORDER BY decision_date ASC
         "#

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id, title, kind, drug_name, sponsor, indication, decision_date, status\n        FROM events\n        ORDER BY decision_date ASC\n        ",
+  "query": "\n        SELECT\n            id,\n            title,\n            kind,\n            drug_name,\n            sponsor,\n            indication,\n            decision_date,\n            advisory_committee_date,\n            primary_endpoint,\n            advisory_committee_vote,\n            status\n        FROM events\n        ORDER BY decision_date ASC\n        ",
   "describe": {
     "columns": [
       {
@@ -40,6 +40,21 @@
       },
       {
         "ordinal": 7,
+        "name": "advisory_committee_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 8,
+        "name": "primary_endpoint",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "advisory_committee_vote",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
         "name": "status",
         "type_info": "Text"
       }
@@ -55,8 +70,11 @@
       false,
       false,
       false,
+      true,
+      true,
+      true,
       false
     ]
   },
-  "hash": "48eebde401467095b5eeca09382b7b5a8bdfd345a544fab1d00bba5ce092f3fc"
+  "hash": "2d4748bd27418be73b0711e4a877c52aee370e4c868f01c878e503cc919fe201"
 }
