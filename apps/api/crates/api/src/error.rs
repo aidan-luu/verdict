@@ -14,6 +14,10 @@ pub enum AppError {
     Internal,
     #[error("bad request: {0}")]
     BadRequest(String),
+    #[error("not found: {0}")]
+    NotFound(String),
+    #[error("conflict: {0}")]
+    Conflict(String),
     #[error("database error")]
     Database(#[from] SqlxError),
 }
@@ -28,6 +32,8 @@ impl IntoResponse for AppError {
         let status = match &self {
             AppError::Internal | AppError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
+            AppError::NotFound(_) => StatusCode::NOT_FOUND,
+            AppError::Conflict(_) => StatusCode::CONFLICT,
         };
 
         let body = Json(ErrorBody {

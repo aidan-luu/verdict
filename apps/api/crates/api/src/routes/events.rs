@@ -1,9 +1,10 @@
 use axum::{
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     Json,
 };
 use chrono::NaiveDate;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
@@ -28,6 +29,14 @@ pub struct ListEventsQuery {
     pub status: Option<String>,
 }
 
+#[derive(Debug, Deserialize, Validate)]
+pub struct CreateForecastRequest {
+    #[validate(custom(function = "validate_probability_range"))]
+    pub probability: Decimal,
+    #[validate(length(min = 1))]
+    pub rationale: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct EventResponse {
     pub id: Uuid,
@@ -39,6 +48,18 @@ pub struct EventResponse {
     pub decision_date: NaiveDate,
     pub status: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct ForecastResponse {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub event_id: Uuid,
+    pub probability: Decimal,
+    pub rationale: String,
+}
+
+// TODO(P1): replace this stub user with Clerk JWT-derived user identity.
+const STUB_USER_ID: Uuid = Uuid::from_u128(0x00000000000040008000000000000001);
 
 pub async fn create_event_handler(
     State(state): State<AppState>,
@@ -63,6 +84,52 @@ pub async fn create_event_handler(
     .await?;
 
     Ok((StatusCode::CREATED, Json(event)))
+}
+
+pub async fn create_forecast_handler(
+    State(state): State<AppState>,
+    Path(event_id): Path<Uuid>,
+    Json(payload): Json<CreateForecastRequest>,
+) -> Result<(StatusCode, Json<ForecastResponse>), AppError> {
+    payload.validate()?;
+
+    let event_status = sqlx::query!(
+        r#"
+        SELECT status
+        FROM events
+        WHERE id = $1
+        "#,
+        event_id
+    )
+    .fetch_optional(&state.pool)
+    .await?;
+
+    let Some(event_status) = event_status else {
+        return Err(AppError::NotFound("event not found".to_string()));
+    };
+
+    if event_status.status != "upcoming" {
+        return Err(AppError::Conflict(
+            "cannot create forecast for non-upcoming event".to_string(),
+        ));
+    }
+
+    let forecast = sqlx::query_as!(
+        ForecastResponse,
+        r#"
+        INSERT INTO forecasts (user_id, event_id, probability, rationale)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, user_id, event_id, probability, rationale
+        "#,
+        STUB_USER_ID,
+        event_id,
+        payload.probability,
+        payload.rationale
+    )
+    .fetch_one(&state.pool)
+    .await?;
+
+    Ok((StatusCode::CREATED, Json(forecast)))
 }
 
 pub async fn list_events_handler(
@@ -107,6 +174,14 @@ fn validate_status(status: &str) -> Result<(), AppError> {
     }
 
     Err(AppError::BadRequest("invalid status filter".to_string()))
+}
+
+fn validate_probability_range(value: &Decimal) -> Result<(), validator::ValidationError> {
+    if *value >= Decimal::ZERO && *value <= Decimal::ONE {
+        return Ok(());
+    }
+
+    Err(validator::ValidationError::new("probability_range"))
 }
 
 #[cfg(test)]
@@ -183,5 +258,73 @@ mod tests {
         assert_eq!(status, StatusCode::OK);
         assert!(body.contains("\"title\":\"A\""));
         assert!(!body.contains("\"title\":\"B\""));
+    }
+
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn create_forecast_returns_not_found_for_unknown_event(pool: PgPool) {
+        let app = router(AppState { pool });
+        let request = Request::builder()
+            .method("POST")
+            .uri("/events/11111111-1111-4111-8111-111111111111/forecasts")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"probability":"0.7000","rationale":"test"}"#))
+            .expect("request should build");
+
+        let response = app.oneshot(request).await.expect("request should run");
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn create_forecast_returns_conflict_for_non_upcoming_event(pool: PgPool) {
+        let event_id = sqlx::query!(
+            r#"
+            INSERT INTO events (title, kind, drug_name, sponsor, indication, decision_date, status)
+            VALUES ('A', 'fda_pdufa', 'Drug A', 'Sponsor A', 'Indication A', '2026-01-01', 'resolved')
+            RETURNING id
+            "#
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("seed should succeed")
+        .id;
+
+        let app = router(AppState { pool });
+        let request = Request::builder()
+            .method("POST")
+            .uri(format!("/events/{event_id}/forecasts"))
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"probability":"0.7000","rationale":"test"}"#))
+            .expect("request should build");
+
+        let response = app.oneshot(request).await.expect("request should run");
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+    }
+
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn create_forecast_returns_created_for_upcoming_event(pool: PgPool) {
+        let event_id = sqlx::query!(
+            r#"
+            INSERT INTO events (title, kind, drug_name, sponsor, indication, decision_date, status)
+            VALUES ('A', 'fda_pdufa', 'Drug A', 'Sponsor A', 'Indication A', '2026-01-01', 'upcoming')
+            RETURNING id
+            "#
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("seed should succeed")
+        .id;
+
+        let app = router(AppState { pool });
+        let request = Request::builder()
+            .method("POST")
+            .uri(format!("/events/{event_id}/forecasts"))
+            .header("content-type", "application/json")
+            .body(Body::from(
+                r#"{"probability":"0.7000","rationale":"forecast rationale"}"#,
+            ))
+            .expect("request should build");
+
+        let response = app.oneshot(request).await.expect("request should run");
+        assert_eq!(response.status(), StatusCode::CREATED);
     }
 }

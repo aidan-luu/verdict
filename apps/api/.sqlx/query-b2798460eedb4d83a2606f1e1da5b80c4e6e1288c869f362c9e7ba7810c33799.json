@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO forecasts (user_id, event_id, probability, rationale)\n        VALUES ($1, $2, $3, $4)\n        RETURNING id, user_id, event_id, probability, rationale\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "event_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "probability",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 4,
+        "name": "rationale",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Numeric",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b2798460eedb4d83a2606f1e1da5b80c4e6e1288c869f362c9e7ba7810c33799"
+}

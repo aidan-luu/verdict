@@ -57,6 +57,7 @@ into an earlier one.
 ### Phase 1 — Spine
 - Rust + Axum backend, Postgres + SQLx, Next.js + TypeScript frontend.
 - Auth via Clerk (JWT verification middleware on the backend).
+- During early Phase 1 slices, auth may be temporarily stubbed and is replaced by Clerk JWT middleware later in Phase 1.
 - Manual event creation: title, drug name, sponsor, indication, decision date.
 - Manual forecast creation: probability, rationale, link to event.
 - Manual resolution: mark event yes / no / voided.
