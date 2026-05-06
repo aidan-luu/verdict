@@ -99,11 +99,13 @@ into an earlier one.
 User (id, clerk_id, created_at)
 
 Event (
-  id, kind, drug_name, sponsor, indication,
+  id, title, kind, drug_name, sponsor, indication,
   decision_date, advisory_committee_date,
   primary_endpoint, status, source_url,
   created_at, resolved_at, outcome
 )
+  title: short human-readable label for lists and UI (e.g. drug + PDUFA date).
+  kind: machine-readable event subtype; v1 is FDA PDUFA only, stored as `fda_pdufa`.
   status:  'upcoming' | 'resolved' | 'voided'
   outcome: 'approved' | 'rejected' | NULL
 

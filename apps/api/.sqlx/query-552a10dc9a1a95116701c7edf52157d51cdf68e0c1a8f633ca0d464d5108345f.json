@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO events (title, kind, drug_name, sponsor, indication, decision_date, status)\n        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, 'upcoming')\n        RETURNING id, title, kind, drug_name, sponsor, indication, decision_date, status\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "drug_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "sponsor",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "indication",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "decision_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 7,
+        "name": "status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Date"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "552a10dc9a1a95116701c7edf52157d51cdf68e0c1a8f633ca0d464d5108345f"
+}

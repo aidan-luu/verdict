@@ -15,13 +15,17 @@ pub async fn health_handler() -> Result<Json<HealthResponse>, AppError> {
 #[cfg(test)]
 mod tests {
     use axum::{body::Body, http::Request};
+    use sqlx::postgres::PgPoolOptions;
     use tower::util::ServiceExt;
 
-    use crate::app::router;
+    use crate::{app::router, state::AppState};
 
     #[tokio::test]
     async fn health_route_returns_ok_json() {
-        let app = router();
+        let pool = PgPoolOptions::new()
+            .connect_lazy("postgres://verdict:verdict@127.0.0.1:5432/verdict")
+            .expect("lazy pool should build");
+        let app = router(AppState { pool });
         let response = app
             .oneshot(
                 Request::builder()

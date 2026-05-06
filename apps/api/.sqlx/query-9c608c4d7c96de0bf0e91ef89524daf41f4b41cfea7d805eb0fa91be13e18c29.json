@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, title, kind, drug_name, sponsor, indication, decision_date, status\n            FROM events\n            WHERE status = $1\n            ORDER BY decision_date ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "drug_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "sponsor",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "indication",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "decision_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 7,
+        "name": "status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9c608c4d7c96de0bf0e91ef89524daf41f4b41cfea7d805eb0fa91be13e18c29"
+}
