@@ -14,7 +14,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let address: SocketAddr = "127.0.0.1:3000".parse()?;
+    let port = std::env::var("PORT")
+        .ok()
+        .and_then(|value| value.parse::<u16>().ok())
+        .unwrap_or(3000);
+    let address = SocketAddr::from(([0, 0, 0, 0], port));
     let database_url = std::env::var("DATABASE_URL")?;
     let pool = connect(&database_url).await?;
     run_migrations(&pool).await?;

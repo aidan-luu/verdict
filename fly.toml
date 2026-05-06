@@ -1,0 +1,15 @@
+app = "verdict-api"
+primary_region = "sjc"
+
+[build]
+
+[env]
+  RUST_LOG = "info"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]

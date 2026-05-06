@@ -38,4 +38,45 @@ Phase 1 — spine. See `SPEC.md` for full scope and phase definitions.
 
 ## Local development
 
-To be filled in during Phase 1 once the skeleton exists.
+1. Start Postgres:
+
+```bash
+docker compose up -d
+```
+
+2. Prepare backend env and run API:
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cd apps/api
+DATABASE_URL=postgres://verdict:verdict@127.0.0.1:5432/verdict sqlx migrate run
+DATABASE_URL=postgres://verdict:verdict@127.0.0.1:5432/verdict cargo run
+```
+
+3. Prepare frontend env and run web app:
+
+```bash
+cp apps/web/.env.example apps/web/.env.local
+cd apps/web
+pnpm dev
+```
+
+The frontend runs on `http://localhost:3001` and calls the API on `http://127.0.0.1:3000`.
+
+## Seed data
+
+Phase 1 demo data is provided in `apps/api/seeds/phase1_demo.sql`.
+Run it manually after migrations so tests remain deterministic:
+
+```bash
+docker compose exec -T postgres psql -U verdict -d verdict < apps/api/seeds/phase1_demo.sql
+```
+
+The seed inserts ~10 FDA-like events (resolved + upcoming) and resolved forecasts so
+the calibration dashboard is populated on day one.
+
+## Deploy notes (Phase 1)
+
+- Backend deploy target: Fly.io (`fly.toml` at repo root).
+- Frontend deploy target: Vercel (`apps/web`), set `NEXT_PUBLIC_API_BASE_URL`.
+- Ensure production `DATABASE_URL` is set for backend migrations/startup.
