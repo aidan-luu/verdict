@@ -37,6 +37,12 @@ pub struct CreateForecastRequest {
     pub rationale: String,
 }
 
+#[derive(Debug, Deserialize, Validate)]
+pub struct ResolveEventRequest {
+    #[validate(custom(function = "validate_resolution_outcome"))]
+    pub outcome: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct EventResponse {
     pub id: Uuid,
@@ -56,6 +62,14 @@ pub struct ForecastResponse {
     pub event_id: Uuid,
     pub probability: Decimal,
     pub rationale: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ResolveEventResponse {
+    pub id: Uuid,
+    pub status: String,
+    pub outcome: Option<String>,
+    pub resolved_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 // TODO(P1): replace this stub user with Clerk JWT-derived user identity.
@@ -168,6 +182,62 @@ pub async fn list_events_handler(
     Ok(Json(events))
 }
 
+pub async fn resolve_event_handler(
+    State(state): State<AppState>,
+    Path(event_id): Path<Uuid>,
+    Json(payload): Json<ResolveEventRequest>,
+) -> Result<Json<ResolveEventResponse>, AppError> {
+    payload.validate()?;
+
+    let event_status = sqlx::query!(
+        r#"
+        SELECT status
+        FROM events
+        WHERE id = $1
+        "#,
+        event_id
+    )
+    .fetch_optional(&state.pool)
+    .await?;
+
+    let Some(event_status) = event_status else {
+        return Err(AppError::NotFound("event not found".to_string()));
+    };
+
+    if event_status.status != "upcoming" {
+        return Err(AppError::Conflict(
+            "cannot resolve event that is not upcoming".to_string(),
+        ));
+    }
+
+    let (next_status, outcome_value): (&str, Option<&str>) = match payload.outcome.as_str() {
+        "approved" | "rejected" => ("resolved", Some(payload.outcome.as_str())),
+        "voided" => ("voided", None),
+        _ => {
+            return Err(AppError::BadRequest(
+                "invalid resolution outcome".to_string(),
+            ))
+        }
+    };
+
+    let resolved_event = sqlx::query_as!(
+        ResolveEventResponse,
+        r#"
+        UPDATE events
+        SET status = $2, outcome = $3, resolved_at = now()
+        WHERE id = $1
+        RETURNING id, status, outcome, resolved_at
+        "#,
+        event_id,
+        next_status,
+        outcome_value
+    )
+    .fetch_one(&state.pool)
+    .await?;
+
+    Ok(Json(resolved_event))
+}
+
 fn validate_status(status: &str) -> Result<(), AppError> {
     if matches!(status, "upcoming" | "resolved" | "voided") {
         return Ok(());
@@ -182,6 +252,14 @@ fn validate_probability_range(value: &Decimal) -> Result<(), validator::Validati
     }
 
     Err(validator::ValidationError::new("probability_range"))
+}
+
+fn validate_resolution_outcome(value: &str) -> Result<(), validator::ValidationError> {
+    if matches!(value, "approved" | "rejected" | "voided") {
+        return Ok(());
+    }
+
+    Err(validator::ValidationError::new("resolution_outcome"))
 }
 
 #[cfg(test)]
@@ -326,5 +404,80 @@ mod tests {
 
         let response = app.oneshot(request).await.expect("request should run");
         assert_eq!(response.status(), StatusCode::CREATED);
+    }
+
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn resolve_event_returns_not_found_for_unknown_event(pool: PgPool) {
+        let app = router(AppState { pool });
+        let request = Request::builder()
+            .method("POST")
+            .uri("/events/11111111-1111-4111-8111-111111111111/resolve")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"outcome":"approved"}"#))
+            .expect("request should build");
+
+        let response = app.oneshot(request).await.expect("request should run");
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn resolve_event_returns_conflict_for_non_upcoming_event(pool: PgPool) {
+        let event_id = sqlx::query!(
+            r#"
+            INSERT INTO events (title, kind, drug_name, sponsor, indication, decision_date, status)
+            VALUES ('A', 'fda_pdufa', 'Drug A', 'Sponsor A', 'Indication A', '2026-01-01', 'resolved')
+            RETURNING id
+            "#
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("seed should succeed")
+        .id;
+
+        let app = router(AppState { pool });
+        let request = Request::builder()
+            .method("POST")
+            .uri(format!("/events/{event_id}/resolve"))
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"outcome":"approved"}"#))
+            .expect("request should build");
+
+        let response = app.oneshot(request).await.expect("request should run");
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+    }
+
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn resolve_event_returns_resolved_for_approved(pool: PgPool) {
+        let event_id = sqlx::query!(
+            r#"
+            INSERT INTO events (title, kind, drug_name, sponsor, indication, decision_date, status)
+            VALUES ('A', 'fda_pdufa', 'Drug A', 'Sponsor A', 'Indication A', '2026-01-01', 'upcoming')
+            RETURNING id
+            "#
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("seed should succeed")
+        .id;
+
+        let app = router(AppState { pool });
+        let request = Request::builder()
+            .method("POST")
+            .uri(format!("/events/{event_id}/resolve"))
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"outcome":"approved"}"#))
+            .expect("request should build");
+
+        let response = app.oneshot(request).await.expect("request should run");
+        let status = response.status();
+        let bytes = http_body_util::BodyExt::collect(response.into_body())
+            .await
+            .expect("response body should collect")
+            .to_bytes();
+        let body = String::from_utf8(bytes.to_vec()).expect("utf8 body");
+
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains("\"status\":\"resolved\""));
+        assert!(body.contains("\"outcome\":\"approved\""));
     }
 }
