@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createForecast, fetchEvents, fetchHealth } from "./client";
+import { createForecast, fetchEvents, fetchHealth, fetchScoreSummary } from "./client";
 
 describe("fetchHealth", () => {
   afterEach(() => {
@@ -83,6 +83,41 @@ describe("createForecast", () => {
       })
     ).resolves.toMatchObject({
       id: "22222222-2222-4222-8222-222222222222"
+    });
+  });
+});
+
+describe("fetchScoreSummary", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("returns parsed score summary payload", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://example.test");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          resolved_forecast_count: 2,
+          total_brier: "0.13000000",
+          mean_brier: "0.06500000",
+          contributions: [
+            {
+              forecast_id: "22222222-2222-4222-8222-222222222222",
+              event_id: "11111111-1111-4111-8111-111111111111",
+              probability: "0.7000",
+              occurred: true,
+              brier_contribution: "0.09000000"
+            }
+          ]
+        })
+      }))
+    );
+
+    await expect(fetchScoreSummary()).resolves.toMatchObject({
+      resolved_forecast_count: 2
     });
   });
 });

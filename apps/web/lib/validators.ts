@@ -39,3 +39,21 @@ export const forecastSchema = z.object({
 });
 
 export type Forecast = z.infer<typeof forecastSchema>;
+
+export const scoreContributionSchema = z.object({
+  forecast_id: z.uuid(),
+  event_id: z.uuid(),
+  probability: z.string(),
+  occurred: z.boolean(),
+  brier_contribution: z.string()
+});
+
+export const scoreSummarySchema = z.object({
+  resolved_forecast_count: z.number(),
+  total_brier: z.string(),
+  mean_brier: z.string(),
+  contributions: z.array(scoreContributionSchema)
+});
+
+export type ScoreContribution = z.infer<typeof scoreContributionSchema>;
+export type ScoreSummary = z.infer<typeof scoreSummarySchema>;

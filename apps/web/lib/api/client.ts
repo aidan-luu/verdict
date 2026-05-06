@@ -7,7 +7,9 @@ import {
   type HealthResponse,
   healthResponseSchema,
   type Event,
-  type Forecast
+  type Forecast,
+  scoreSummarySchema,
+  type ScoreSummary
 } from "../validators";
 
 export class ApiError extends Error {
@@ -75,4 +77,21 @@ export async function createForecast(input: CreateForecastInput): Promise<Foreca
 
   const json = await response.json();
   return forecastSchema.parse(json);
+}
+
+export async function fetchScoreSummary(): Promise<ScoreSummary> {
+  const response = await fetch(`${getApiBaseUrl()}/forecasts/scores/summary`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json"
+    },
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.status, `score summary endpoint failed: ${response.status}`);
+  }
+
+  const json = await response.json();
+  return scoreSummarySchema.parse(json);
 }

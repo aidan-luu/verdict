@@ -1,6 +1,7 @@
 import { ApiError, createForecast, fetchEvents, fetchHealth } from "../lib/api/client";
 import { createForecastInputSchema } from "../lib/validators";
 import { ForecastForm, type ForecastFormState } from "./forecast-form";
+import Link from "next/link";
 
 export default async function HomePage() {
   try {
@@ -76,6 +77,11 @@ export default async function HomePage() {
         {events.length > 0 ? (
           <ForecastForm events={events} submitForecastAction={submitForecastAction} />
         ) : null}
+        <p className="mt-6">
+          <Link className="text-blue-700 underline" href="/calibration">
+            Open calibration dashboard
+          </Link>
+        </p>
       </main>
     );
   } catch {
