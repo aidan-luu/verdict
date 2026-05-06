@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            f.id AS forecast_id,\n            f.event_id,\n            f.probability,\n            (e.outcome = 'approved') AS \"occurred!\"\n        FROM forecasts f\n        JOIN events e ON e.id = f.event_id\n        WHERE e.status = 'resolved' AND e.outcome IS NOT NULL\n        ORDER BY f.created_at ASC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "forecast_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "event_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "probability",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "occurred!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "d9c4fa2ef83e24b9e54f4310d3b193d0438e12986fbde700ba1cb7ee1985f6ed"
+}
