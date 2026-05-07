@@ -10,9 +10,14 @@ publish = false
 [workspace.dependencies]
 axum = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
 http-body-util = "0.1"
 rust_decimal = { version = "1", features = ["serde"] }
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = [
+    "json",
+    "rustls-tls",
+    "stream",
+] }
 sqlx = { version = "0.8", features = [
     "runtime-tokio-rustls",
     "postgres",

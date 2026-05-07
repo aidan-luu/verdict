@@ -13,8 +13,8 @@ Rust + Axum + Tokio + SQLx + Postgres 16 (backend).
 Apalis + Redis (background jobs).
 Next.js 15 App Router + TypeScript strict + Tailwind + shadcn/ui + Recharts.
 Clerk for auth (JWT verification on backend).
-Anthropic API for LLM ingestion.
-Fly.io (Rust) + Vercel (Next.js).
+Google Gemini API for LLM ingestion.
+Local-first development; Fly.io (Rust) + Vercel (Next.js) when deploying.
 
 ## Hard rules
 - No `unwrap` or `expect` outside tests. Use `?` and `thiserror`.

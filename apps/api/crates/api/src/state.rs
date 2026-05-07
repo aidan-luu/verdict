@@ -1,20 +1,23 @@
 use sqlx::PgPool;
 
+use crate::ingest::pdf_fetch::PdfFetchConfig;
+
 #[derive(Clone)]
 pub struct AppState {
     pub pool: PgPool,
     pub http_client: reqwest::Client,
-    pub anthropic: AnthropicConfig,
+    pub gemini: GeminiConfig,
+    pub pdf_fetch: PdfFetchConfig,
 }
 
 #[derive(Clone)]
-pub struct AnthropicConfig {
+pub struct GeminiConfig {
     pub api_key: String,
     pub model: String,
 }
 
-impl AnthropicConfig {
-    pub const DEFAULT_MODEL: &'static str = "claude-sonnet-4-6";
+impl GeminiConfig {
+    pub const DEFAULT_MODEL: &'static str = "gemini-2.0-flash";
 }
 
 impl AppState {
@@ -22,10 +25,11 @@ impl AppState {
         Self {
             pool,
             http_client: reqwest::Client::new(),
-            anthropic: AnthropicConfig {
+            gemini: GeminiConfig {
                 api_key: "test-api-key".to_string(),
-                model: AnthropicConfig::DEFAULT_MODEL.to_string(),
+                model: GeminiConfig::DEFAULT_MODEL.to_string(),
             },
+            pdf_fetch: PdfFetchConfig::for_tests(),
         }
     }
 }

@@ -20,8 +20,8 @@ prediction markets on the same events.
 - **Background jobs:** Apalis + Redis
 - **Frontend:** Next.js 15, TypeScript, Tailwind, Recharts
 - **Auth:** Clerk
-- **LLM ingestion:** Anthropic API
-- **Hosting:** Fly.io (backend) + Vercel (frontend)
+- **LLM ingestion:** Google Gemini API
+- **Hosting:** local-first for now; Fly.io (backend) + Vercel (frontend) when deploying
 
 ## Status
 

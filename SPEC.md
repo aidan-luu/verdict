@@ -69,7 +69,7 @@ into an earlier one.
 **Phase 1 is done when the loop works end-to-end on a live URL.**
 
 ### Phase 2 — LLM ingestion
-- Pipeline: take an FDA briefing PDF (URL or upload), call the Anthropic API,
+- Pipeline: take an FDA briefing PDF (URL or upload), call the Google Gemini API,
   extract a structured `Event` record (drug, sponsor, indication, advisory
   committee date, decision date, primary endpoint, advisory committee vote
   if held).

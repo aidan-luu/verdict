@@ -24,8 +24,11 @@ non-obvious borrow-checker workarounds inline with one sentence on the why.
 - **Frontend:** Next.js 15 (App Router), TypeScript strict, Tailwind,
   shadcn/ui, Recharts. Type the API client from the Rust side via `utoipa`
   (Rust → OpenAPI) and `openapi-typescript` (OpenAPI → TS).
-- **LLM:** Anthropic Claude API. Default to `claude-sonnet-4-6` for ingestion.
-- **Deployment:** Fly.io for the Rust services, Vercel for the Next.js app.
+- **LLM:** Google Gemini API. Default to `gemini-2.0-flash` for Phase 2 PDF
+  ingestion (budget-friendly); pin the exact model id in env when you need
+  reproducibility.
+- **Deployment:** Local-first for now; when you ship publicly, Fly.io for the
+  Rust services and Vercel for the Next.js app are the intended targets.
 - **Testing:** `cargo test` + `tokio::test` for Rust. Vitest for the frontend.
   Playwright for end-to-end on the critical demo path. No more than that.
 
