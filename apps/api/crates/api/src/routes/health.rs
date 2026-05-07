@@ -25,7 +25,7 @@ mod tests {
         let pool = PgPoolOptions::new()
             .connect_lazy("postgres://verdict:verdict@127.0.0.1:5432/verdict")
             .expect("lazy pool should build");
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let response = app
             .oneshot(
                 Request::builder()

@@ -121,7 +121,7 @@ mod tests {
         .await
         .expect("seed forecasts should succeed");
 
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .uri("/forecasts/scores/summary")
             .body(Body::empty())

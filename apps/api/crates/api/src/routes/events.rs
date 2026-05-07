@@ -330,7 +330,7 @@ mod tests {
 
     #[sqlx::test(migrations = "../../migrations")]
     async fn create_event_rejects_empty_title(pool: PgPool) {
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .method("POST")
             .uri("/events")
@@ -346,7 +346,7 @@ mod tests {
 
     #[sqlx::test(migrations = "../../migrations")]
     async fn create_event_returns_created_payload(pool: PgPool) {
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .method("POST")
             .uri("/events")
@@ -374,7 +374,7 @@ mod tests {
         .await
         .expect("seed should succeed");
 
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .uri("/events?status=upcoming")
             .body(Body::empty())
@@ -395,7 +395,7 @@ mod tests {
 
     #[sqlx::test(migrations = "../../migrations")]
     async fn create_forecast_returns_not_found_for_unknown_event(pool: PgPool) {
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .method("POST")
             .uri("/events/11111111-1111-4111-8111-111111111111/forecasts")
@@ -421,7 +421,7 @@ mod tests {
         .expect("seed should succeed")
         .id;
 
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .method("POST")
             .uri(format!("/events/{event_id}/forecasts"))
@@ -447,7 +447,7 @@ mod tests {
         .expect("seed should succeed")
         .id;
 
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .method("POST")
             .uri(format!("/events/{event_id}/forecasts"))
@@ -463,7 +463,7 @@ mod tests {
 
     #[sqlx::test(migrations = "../../migrations")]
     async fn resolve_event_returns_not_found_for_unknown_event(pool: PgPool) {
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .method("POST")
             .uri("/events/11111111-1111-4111-8111-111111111111/resolve")
@@ -489,7 +489,7 @@ mod tests {
         .expect("seed should succeed")
         .id;
 
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .method("POST")
             .uri(format!("/events/{event_id}/resolve"))
@@ -515,7 +515,7 @@ mod tests {
         .expect("seed should succeed")
         .id;
 
-        let app = router(AppState { pool });
+        let app = router(AppState::for_tests(pool));
         let request = Request::builder()
             .method("POST")
             .uri(format!("/events/{event_id}/resolve"))
