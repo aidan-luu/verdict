@@ -3,11 +3,13 @@ import {
   createForecastInputSchema,
   type CreateForecastInput,
   eventListSchema,
+  eventSchema,
   forecastSchema,
   type HealthResponse,
   healthResponseSchema,
   type Event,
   type Forecast,
+  ingestFdaBriefingInputSchema,
   scoreSummarySchema,
   type ScoreSummary
 } from "../validators";
@@ -20,6 +22,22 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.status = status;
   }
+}
+
+/** Axum errors use `{ "error": "..." }` — surface that text when present. */
+async function readApiErrorMessage(response: Response): Promise<string> {
+  try {
+    const data: unknown = await response.json();
+    if (data && typeof data === "object" && "error" in data) {
+      const err = (data as { error?: unknown }).error;
+      if (typeof err === "string" && err.length > 0) {
+        return err;
+      }
+    }
+  } catch {
+    // non-JSON body
+  }
+  return `request failed (${response.status})`;
 }
 
 export async function fetchHealth(): Promise<HealthResponse> {
@@ -49,7 +67,7 @@ export async function fetchEvents(status = "upcoming"): Promise<Event[]> {
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, `events endpoint failed: ${response.status}`);
+    throw new ApiError(response.status, await readApiErrorMessage(response));
   }
 
   const json = await response.json();
@@ -72,7 +90,7 @@ export async function createForecast(input: CreateForecastInput): Promise<Foreca
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, `forecast endpoint failed: ${response.status}`);
+    throw new ApiError(response.status, await readApiErrorMessage(response));
   }
 
   const json = await response.json();
@@ -89,9 +107,29 @@ export async function fetchScoreSummary(): Promise<ScoreSummary> {
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, `score summary endpoint failed: ${response.status}`);
+    throw new ApiError(response.status, await readApiErrorMessage(response));
   }
 
   const json = await response.json();
   return scoreSummarySchema.parse(json);
+}
+
+export async function ingestFromFdaBriefing(pdfUrl: string): Promise<Event> {
+  const parsed = ingestFdaBriefingInputSchema.parse({ pdfUrl });
+  const response = await fetch(`${getApiBaseUrl()}/events/from-fda-briefing`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json"
+    },
+    cache: "no-store",
+    body: JSON.stringify({ pdf_url: parsed.pdfUrl })
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.status, await readApiErrorMessage(response));
+  }
+
+  const json = await response.json();
+  return eventSchema.parse(json);
 }

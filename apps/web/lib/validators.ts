@@ -14,7 +14,11 @@ export const eventSchema = z.object({
   sponsor: z.string(),
   indication: z.string(),
   decision_date: z.string(),
-  status: z.enum(["upcoming", "resolved", "voided"])
+  status: z.enum(["upcoming", "resolved", "voided"]),
+  advisory_committee_date: z.string().nullable().optional(),
+  primary_endpoint: z.string().nullable().optional(),
+  advisory_committee_vote: z.string().nullable().optional(),
+  source_url: z.string().nullable().optional()
 });
 
 export const eventListSchema = z.array(eventSchema);
@@ -29,6 +33,23 @@ export const createForecastInputSchema = z.object({
   rationale: z.string().min(1, "Rationale is required")
 });
 export type CreateForecastInput = z.infer<typeof createForecastInputSchema>;
+
+/** Form + server action: paste an FDA briefing PDF URL (Phase 2 ingest). */
+export const ingestFdaBriefingInputSchema = z.object({
+  pdfUrl: z
+    .string()
+    .trim()
+    .min(1, "PDF URL is required")
+    .url("Enter a valid URL")
+    .refine(
+      (value: string) =>
+        value.startsWith("https:") ||
+        value.startsWith("http://127.0.0.1") ||
+        value.startsWith("http://localhost"),
+      "Use HTTPS, or http://localhost for local dev stubs"
+    )
+});
+export type IngestFdaBriefingInput = z.infer<typeof ingestFdaBriefingInputSchema>;
 
 export const forecastSchema = z.object({
   id: z.uuid(),

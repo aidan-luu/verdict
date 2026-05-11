@@ -4,6 +4,7 @@ use axum::{
     Json,
 };
 use chrono::NaiveDate;
+use reqwest::Url;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -46,6 +47,12 @@ pub struct CreateForecastRequest {
 pub struct ResolveEventRequest {
     #[validate(custom(function = "validate_resolution_outcome"))]
     pub outcome: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct IngestFromFdaBriefingRequest {
+    #[validate(length(min = 1))]
+    pub pdf_url: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -237,6 +244,23 @@ pub async fn list_events_handler(
     Ok(Json(events))
 }
 
+/// Phase 2 PR5 will implement fetch → Gemini → validate → insert. PR6 wires the UI; this handler
+/// validates `pdf_url` and returns a clear error until the pipeline is complete.
+pub async fn ingest_from_fda_briefing_handler(
+    State(_state): State<AppState>,
+    Json(payload): Json<IngestFromFdaBriefingRequest>,
+) -> Result<(StatusCode, Json<EventResponse>), AppError> {
+    payload.validate()?;
+
+    Url::parse(payload.pdf_url.trim())
+        .map_err(|_| AppError::BadRequest("invalid pdf url".to_string()))?;
+
+    Err(AppError::BadRequest(
+        "Briefing ingest (PDF fetch, Gemini extraction, and DB insert) is not implemented yet — Phase 2 PR5."
+            .to_string(),
+    ))
+}
+
 pub async fn resolve_event_handler(
     State(state): State<AppState>,
     Path(event_id): Path<Uuid>,
@@ -327,6 +351,28 @@ mod tests {
     use tower::util::ServiceExt;
 
     use crate::{app::router, state::AppState};
+
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn ingest_from_fda_briefing_returns_bad_request_until_pr5(pool: PgPool) {
+        let app = router(AppState::for_tests(pool));
+        let request = Request::builder()
+            .method("POST")
+            .uri("/events/from-fda-briefing")
+            .header("content-type", "application/json")
+            .body(Body::from(
+                r#"{"pdf_url":"https://www.fda.gov/drugs/foo.pdf"}"#,
+            ))
+            .expect("request should build");
+
+        let response = app.oneshot(request).await.expect("request should run");
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let bytes = http_body_util::BodyExt::collect(response.into_body())
+            .await
+            .expect("response body should collect")
+            .to_bytes();
+        let body = String::from_utf8(bytes.to_vec()).expect("utf8 body");
+        assert!(body.contains("PR5"));
+    }
 
     #[sqlx::test(migrations = "../../migrations")]
     async fn create_event_rejects_empty_title(pool: PgPool) {

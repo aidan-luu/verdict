@@ -77,7 +77,10 @@ export default async function HomePage() {
         {events.length > 0 ? (
           <ForecastForm events={events} submitForecastAction={submitForecastAction} />
         ) : null}
-        <p className="mt-6">
+        <p className="mt-6 flex flex-wrap gap-x-4 gap-y-2">
+          <Link className="text-blue-700 underline" href="/ingest">
+            Ingest FDA briefing (PDF URL)
+          </Link>
           <Link className="text-blue-700 underline" href="/calibration">
             Open calibration dashboard
           </Link>

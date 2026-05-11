@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createForecast, fetchEvents, fetchHealth, fetchScoreSummary } from "./client";
+import {
+  createForecast,
+  fetchEvents,
+  fetchHealth,
+  fetchScoreSummary,
+  ingestFromFdaBriefing
+} from "./client";
 
 describe("fetchHealth", () => {
   afterEach(() => {
@@ -83,6 +89,63 @@ describe("createForecast", () => {
       })
     ).resolves.toMatchObject({
       id: "22222222-2222-4222-8222-222222222222"
+    });
+  });
+});
+
+describe("ingestFromFdaBriefing", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("returns parsed event on 201", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://example.test");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          id: "33333333-3333-4333-8333-333333333333",
+          title: "Drug Z PDUFA",
+          kind: "fda_pdufa",
+          drug_name: "Drug Z",
+          sponsor: "Sponsor Z",
+          indication: "Condition Z",
+          decision_date: "2026-06-15",
+          status: "upcoming",
+          advisory_committee_date: null,
+          primary_endpoint: null,
+          advisory_committee_vote: null,
+          source_url: "https://www.fda.gov/x.pdf"
+        })
+      }))
+    );
+
+    await expect(
+      ingestFromFdaBriefing("https://www.fda.gov/drugs/doc.pdf")
+    ).resolves.toMatchObject({
+      id: "33333333-3333-4333-8333-333333333333",
+      title: "Drug Z PDUFA",
+      source_url: "https://www.fda.gov/x.pdf"
+    });
+  });
+
+  it("throws ApiError with server message on failure", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://example.test");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: "bad request: invalid pdf url" })
+      }))
+    );
+
+    await expect(ingestFromFdaBriefing("https://www.fda.gov/x.pdf")).rejects.toMatchObject({
+      name: "ApiError",
+      status: 400,
+      message: "bad request: invalid pdf url"
     });
   });
 });
