@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            id,\n            title,\n            kind,\n            drug_name,\n            sponsor,\n            indication,\n            decision_date,\n            advisory_committee_date,\n            primary_endpoint,\n            advisory_committee_vote,\n            status\n        FROM events\n        ORDER BY decision_date ASC\n        ",
+  "query": "\n            SELECT\n                id,\n                title,\n                kind,\n                drug_name,\n                sponsor,\n                indication,\n                decision_date,\n                advisory_committee_date,\n                primary_endpoint,\n                advisory_committee_vote,\n                status,\n                source_url\n            FROM events\n            WHERE status = $1\n            ORDER BY decision_date ASC\n            ",
   "describe": {
     "columns": [
       {
@@ -57,10 +57,17 @@
         "ordinal": 10,
         "name": "status",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "source_url",
+        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Text"
+      ]
     },
     "nullable": [
       false,
@@ -73,8 +80,9 @@
       true,
       true,
       true,
-      false
+      false,
+      true
     ]
   },
-  "hash": "2d4748bd27418be73b0711e4a877c52aee370e4c868f01c878e503cc919fe201"
+  "hash": "ddae212e01d067a9ef6203b51a16519cfa9a737baee88184897842eecaaeffde"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        INSERT INTO events (\n            title,\n            kind,\n            drug_name,\n            sponsor,\n            indication,\n            decision_date,\n            advisory_committee_date,\n            primary_endpoint,\n            advisory_committee_vote,\n            status\n        )\n        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, $6, $7, $8, 'upcoming')\n        RETURNING\n            id,\n            title,\n            kind,\n            drug_name,\n            sponsor,\n            indication,\n            decision_date,\n            advisory_committee_date,\n            primary_endpoint,\n            advisory_committee_vote,\n            status\n        ",
+  "query": "\n        SELECT\n            id,\n            title,\n            kind,\n            drug_name,\n            sponsor,\n            indication,\n            decision_date,\n            advisory_committee_date,\n            primary_endpoint,\n            advisory_committee_vote,\n            status,\n            source_url\n        FROM events\n        ORDER BY decision_date ASC\n        ",
   "describe": {
     "columns": [
       {
@@ -57,19 +57,15 @@
         "ordinal": 10,
         "name": "status",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "source_url",
+        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Left": [
-        "Text",
-        "Text",
-        "Text",
-        "Text",
-        "Date",
-        "Date",
-        "Text",
-        "Text"
-      ]
+      "Left": []
     },
     "nullable": [
       false,
@@ -82,8 +78,9 @@
       true,
       true,
       true,
-      false
+      false,
+      true
     ]
   },
-  "hash": "9dbd54c514e63afcef7d0f3c7c277072eec45ae048c3aea5a6b6051655031312"
+  "hash": "b3f1db2e99c253f2048f749fb429aa07f0103b841a6625c6a658ad9e6a482666"
 }

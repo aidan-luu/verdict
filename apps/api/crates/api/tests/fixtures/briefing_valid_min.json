@@ -1,0 +1,9 @@
+{
+  "drug_name": "FixtureDrug",
+  "sponsor": "Fixture Sponsor LLC",
+  "indication": "Fixture indication for regression testing.",
+  "decision_date": "2026-09-30",
+  "advisory_committee_date": null,
+  "primary_endpoint": null,
+  "advisory_committee_vote": null
+}

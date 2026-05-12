@@ -24,7 +24,7 @@ non-obvious borrow-checker workarounds inline with one sentence on the why.
 - **Frontend:** Next.js 15 (App Router), TypeScript strict, Tailwind,
   shadcn/ui, Recharts. Type the API client from the Rust side via `utoipa`
   (Rust → OpenAPI) and `openapi-typescript` (OpenAPI → TS).
-- **LLM:** Google Gemini API. Default to `gemini-2.0-flash` for Phase 2 PDF
+- **LLM:** Google Gemini API. Default to `gemini-2.5-flash-lite` for Phase 2 PDF
   ingestion (budget-friendly); pin the exact model id in env when you need
   reproducibility.
 - **Deployment:** Local-first for now; when you ship publicly, Fly.io for the

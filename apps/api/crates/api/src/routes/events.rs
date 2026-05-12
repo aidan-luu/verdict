@@ -10,6 +10,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
+use crate::ingest::gemini_briefing::derive_briefing_event_title;
+use crate::ingest::pdf_fetch::fetch_pdf_bytes;
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize, Validate)]
@@ -68,6 +70,7 @@ pub struct EventResponse {
     pub primary_endpoint: Option<String>,
     pub advisory_committee_vote: Option<String>,
     pub status: String,
+    pub source_url: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -109,9 +112,10 @@ pub async fn create_event_handler(
             advisory_committee_date,
             primary_endpoint,
             advisory_committee_vote,
-            status
+            status,
+            source_url
         )
-        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, $6, $7, $8, 'upcoming')
+        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, $6, $7, $8, 'upcoming', NULL)
         RETURNING
             id,
             title,
@@ -123,7 +127,8 @@ pub async fn create_event_handler(
             advisory_committee_date,
             primary_endpoint,
             advisory_committee_vote,
-            status
+            status,
+            source_url
         "#,
         payload.title,
         payload.drug_name,
@@ -206,7 +211,8 @@ pub async fn list_events_handler(
                 advisory_committee_date,
                 primary_endpoint,
                 advisory_committee_vote,
-                status
+                status,
+                source_url
             FROM events
             WHERE status = $1
             ORDER BY decision_date ASC
@@ -233,7 +239,8 @@ pub async fn list_events_handler(
             advisory_committee_date,
             primary_endpoint,
             advisory_committee_vote,
-            status
+            status,
+            source_url
         FROM events
         ORDER BY decision_date ASC
         "#
@@ -244,21 +251,67 @@ pub async fn list_events_handler(
     Ok(Json(events))
 }
 
-/// Phase 2 PR5 will implement fetch → Gemini → validate → insert. PR6 wires the UI; this handler
-/// validates `pdf_url` and returns a clear error until the pipeline is complete.
+/// Ingests an FDA-hosted briefing PDF: fetch bytes (SSRF-safe), Gemini structured extract, validate, insert `events`.
 pub async fn ingest_from_fda_briefing_handler(
-    State(_state): State<AppState>,
+    State(state): State<AppState>,
     Json(payload): Json<IngestFromFdaBriefingRequest>,
 ) -> Result<(StatusCode, Json<EventResponse>), AppError> {
     payload.validate()?;
+    let trimmed = payload.pdf_url.trim();
+    Url::parse(trimmed).map_err(|_| AppError::BadRequest("invalid pdf url".to_string()))?;
 
-    Url::parse(payload.pdf_url.trim())
-        .map_err(|_| AppError::BadRequest("invalid pdf url".to_string()))?;
+    let pdf_bytes = fetch_pdf_bytes(trimmed, &state.pdf_fetch).await?;
+    let extraction = state
+        .briefing
+        .extract_structured_briefing(&pdf_bytes, trimmed)
+        .await?;
+    let title = derive_briefing_event_title(&extraction.drug_name, extraction.decision_date);
 
-    Err(AppError::BadRequest(
-        "Briefing ingest (PDF fetch, Gemini extraction, and DB insert) is not implemented yet — Phase 2 PR5."
-            .to_string(),
-    ))
+    let event = sqlx::query_as!(
+        EventResponse,
+        r#"
+        INSERT INTO events (
+            title,
+            kind,
+            drug_name,
+            sponsor,
+            indication,
+            decision_date,
+            advisory_committee_date,
+            primary_endpoint,
+            advisory_committee_vote,
+            status,
+            source_url
+        )
+        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, $6, $7, $8, 'upcoming', $9)
+        RETURNING
+            id,
+            title,
+            kind,
+            drug_name,
+            sponsor,
+            indication,
+            decision_date,
+            advisory_committee_date,
+            primary_endpoint,
+            advisory_committee_vote,
+            status,
+            source_url
+        "#,
+        title,
+        extraction.drug_name,
+        extraction.sponsor,
+        extraction.indication,
+        extraction.decision_date,
+        extraction.advisory_committee_date,
+        extraction.primary_endpoint,
+        extraction.advisory_committee_vote,
+        trimmed,
+    )
+    .fetch_one(&state.pool)
+    .await?;
+
+    Ok((StatusCode::CREATED, Json(event)))
 }
 
 pub async fn resolve_event_handler(
@@ -347,31 +400,60 @@ mod tests {
         body::Body,
         http::{Request, StatusCode},
     };
+    use serde_json::json;
     use sqlx::PgPool;
+    use std::time::Duration;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
     use tower::util::ServiceExt;
 
     use crate::{app::router, state::AppState};
 
     #[sqlx::test(migrations = "../../migrations")]
-    async fn ingest_from_fda_briefing_returns_bad_request_until_pr5(pool: PgPool) {
+    async fn ingest_from_fda_briefing_creates_event_from_loopback_pdf(pool: PgPool) {
+        let body = b"%PDF-1.4\n%stub\n".to_vec();
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let port = listener.local_addr().expect("addr").port();
+        let url = format!("http://127.0.0.1:{port}/briefing.pdf");
+
+        tokio::spawn(async move {
+            let mut socket = listener.accept().await.expect("accept").0;
+            let mut buf = vec![0u8; 2048];
+            let _ = tokio::time::timeout(Duration::from_secs(2), socket.read(&mut buf))
+                .await
+                .expect("read timeout")
+                .expect("read");
+
+            let header = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/pdf\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                body.len()
+            );
+            let mut out = header.into_bytes();
+            out.extend_from_slice(&body);
+            socket.write_all(&out).await.expect("write");
+        });
+
+        tokio::time::sleep(Duration::from_millis(20)).await;
+
         let app = router(AppState::for_tests(pool));
+        let payload = json!({ "pdf_url": url }).to_string();
         let request = Request::builder()
             .method("POST")
             .uri("/events/from-fda-briefing")
             .header("content-type", "application/json")
-            .body(Body::from(
-                r#"{"pdf_url":"https://www.fda.gov/drugs/foo.pdf"}"#,
-            ))
+            .body(Body::from(payload))
             .expect("request should build");
 
         let response = app.oneshot(request).await.expect("request should run");
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(response.status(), StatusCode::CREATED);
         let bytes = http_body_util::BodyExt::collect(response.into_body())
             .await
             .expect("response body should collect")
             .to_bytes();
-        let body = String::from_utf8(bytes.to_vec()).expect("utf8 body");
-        assert!(body.contains("PR5"));
+        let response_body = String::from_utf8(bytes.to_vec()).expect("utf8 body");
+        assert!(response_body.contains("StubDrug"));
+        assert!(response_body.contains("StubDrug PDUFA"));
+        assert!(response_body.contains("127.0.0.1"));
     }
 
     #[sqlx::test(migrations = "../../migrations")]

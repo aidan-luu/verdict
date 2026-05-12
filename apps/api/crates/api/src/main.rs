@@ -1,15 +1,20 @@
 use std::net::SocketAddr;
+use std::path::Path;
+use std::sync::Arc;
 
 use tokio::net::TcpListener;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 use verdict_api::app::router;
 use verdict_api::db::{connect, run_migrations};
+use verdict_api::ingest::gemini_briefing::LiveGeminiBriefing;
 use verdict_api::ingest::pdf_fetch::PdfFetchConfig;
 use verdict_api::state::{AppState, GeminiConfig};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = dotenvy::from_path(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.env")).ok();
+
     tracing_subscriber::registry()
         .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
         .with(tracing_subscriber::fmt::layer())
@@ -36,14 +41,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool = connect(&database_url).await?;
     run_migrations(&pool).await?;
 
+    let gemini = GeminiConfig {
+        api_key: gemini_api_key,
+        model: gemini_model,
+    };
+    let briefing = Arc::new(LiveGeminiBriefing::new(gemini.clone(), http_client.clone()));
+
     let app_state = AppState {
         pool,
         http_client,
-        gemini: GeminiConfig {
-            api_key: gemini_api_key,
-            model: gemini_model,
-        },
+        gemini,
         pdf_fetch,
+        briefing,
     };
     let listener = TcpListener::bind(address).await?;
     info!("verdict-api listening on {address}");

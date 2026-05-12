@@ -43,7 +43,7 @@ flowchart LR
 **Backend changes:**
 - Add `reqwest` to `apps/api/Cargo.toml` workspace dependencies; depend from `crates/api`.
 - Extend `AppState` (or a small nested config struct held by `AppState`) with a configured `reqwest::Client` (timeouts, HTTPS).
-- Load **`GEMINI_API_KEY`** from the environment; optional **`GEMINI_MODEL`** defaulting to the project standard in `CLAUDE.md` (currently `gemini-2.0-flash`; pin a different id in env when you need reproducibility).
+- Load **`GEMINI_API_KEY`** from the environment; optional **`GEMINI_MODEL`** defaulting to the project standard in `CLAUDE.md` (currently `gemini-2.5-flash-lite`; pin a different id in env when you need reproducibility).
 - Document vars in `apps/api/.env.example`.
 - No `unwrap()` / `expect()` on production paths; use `thiserror` and propagate.
 
