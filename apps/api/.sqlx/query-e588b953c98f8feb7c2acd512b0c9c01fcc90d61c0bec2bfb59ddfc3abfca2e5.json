@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO historical_event (\n            application_number,\n            drug_name,\n            sponsor_name,\n            application_type,\n            approval_date,\n            review_priority,\n            decision_outcome,\n            enrichment_status,\n            source,\n            raw_openfda_data\n        )\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n        ON CONFLICT (application_number) DO UPDATE SET\n            drug_name = EXCLUDED.drug_name,\n            sponsor_name = EXCLUDED.sponsor_name,\n            application_type = EXCLUDED.application_type,\n            approval_date = EXCLUDED.approval_date,\n            review_priority = EXCLUDED.review_priority,\n            raw_openfda_data = EXCLUDED.raw_openfda_data,\n            updated_at = now()\n        RETURNING id, (xmax = 0) AS \"inserted!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "inserted!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Date",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "e588b953c98f8feb7c2acd512b0c9c01fcc90d61c0bec2bfb59ddfc3abfca2e5"
+}

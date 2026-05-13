@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT decision_outcome, enrichment_status, notes FROM historical_event WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "decision_outcome",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "enrichment_status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "notes",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "70a8cf86d881a09c245e2199ca2b15f937e273415939bcee7389150fea2bd40e"
+}

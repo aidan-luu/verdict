@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE historical_event SET\n            indication_area = COALESCE($2, indication_area),\n            primary_endpoint_type = COALESCE($3, primary_endpoint_type),\n            advisory_committee_held = COALESCE($4, advisory_committee_held),\n            advisory_committee_vote = COALESCE($5, advisory_committee_vote),\n            enrichment_status = CASE\n                WHEN enrichment_status = 'manually_reviewed' THEN 'manually_reviewed'\n                ELSE 'llm_enriched'\n            END,\n            updated_at = now()\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0f112655dcbebe73041f2e4c36cfbe41810f58d51c5f84904999d81bf99dc711"
+}

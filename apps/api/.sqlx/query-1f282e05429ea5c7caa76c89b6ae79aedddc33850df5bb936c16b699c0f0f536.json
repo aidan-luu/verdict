@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE historical_event SET\n                indication_area = 'oncology',\n                primary_endpoint_type = 'overall_survival',\n                advisory_committee_held = true,\n                enrichment_status = 'llm_enriched'\n            WHERE application_number = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1f282e05429ea5c7caa76c89b6ae79aedddc33850df5bb936c16b699c0f0f536"
+}

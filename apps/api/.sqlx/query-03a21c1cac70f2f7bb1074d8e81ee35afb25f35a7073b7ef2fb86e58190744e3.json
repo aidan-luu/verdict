@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT indication_area, primary_endpoint_type, advisory_committee_held,\n                   enrichment_status\n            FROM historical_event WHERE application_number = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "indication_area",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "primary_endpoint_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "advisory_committee_held",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "enrichment_status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "03a21c1cac70f2f7bb1074d8e81ee35afb25f35a7073b7ef2fb86e58190744e3"
+}

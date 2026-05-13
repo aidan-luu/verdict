@@ -4,4 +4,5 @@ pub mod error;
 pub mod ingest;
 pub mod routes;
 pub mod scoring;
+pub mod services;
 pub mod state;

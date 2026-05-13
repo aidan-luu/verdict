@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE historical_event SET enrichment_status = 'manually_reviewed' WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9964639490c7dd8c7f5a413a20a40f9da08b6d3eb51b8c7db3bd878567e89413"
+}

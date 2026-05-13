@@ -1,0 +1,118 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id,\n            application_number,\n            drug_name,\n            sponsor_name,\n            application_type,\n            approval_date,\n            review_priority,\n            indication_area,\n            primary_endpoint_type,\n            advisory_committee_held,\n            advisory_committee_vote,\n            decision_outcome,\n            enrichment_status,\n            source,\n            notes,\n            created_at,\n            updated_at\n        FROM historical_event\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "application_number",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "drug_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "sponsor_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "application_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "approval_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 6,
+        "name": "review_priority",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "indication_area",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "primary_endpoint_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "advisory_committee_held",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "advisory_committee_vote",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "decision_outcome",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "enrichment_status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "source",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "97d388210d6f5518cae34f62f0d4508621a7e98e694b6e87455d515c0a3ca3ff"
+}

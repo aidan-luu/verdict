@@ -1,5 +1,6 @@
 use axum::{routing::get, Router};
 
+use crate::routes::admin::override_historical_event_handler;
 use crate::routes::events::{
     create_event_handler, create_forecast_handler, ingest_from_fda_briefing_handler,
     list_events_handler, resolve_event_handler,
@@ -28,5 +29,9 @@ pub fn router(app_state: AppState) -> Router {
             axum::routing::post(resolve_event_handler),
         )
         .route("/forecasts/scores/summary", get(score_summary_handler))
+        .route(
+            "/admin/historical_events/{historical_event_id}",
+            axum::routing::post(override_historical_event_handler),
+        )
         .with_state(app_state)
 }

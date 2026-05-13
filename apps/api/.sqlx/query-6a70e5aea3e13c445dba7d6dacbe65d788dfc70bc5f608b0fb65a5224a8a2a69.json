@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT indication_area, enrichment_status\n            FROM historical_event WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "indication_area",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "enrichment_status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "6a70e5aea3e13c445dba7d6dacbe65d788dfc70bc5f608b0fb65a5224a8a2a69"
+}
