@@ -1,5 +1,16 @@
 # Phase 1 — PR breakdown
 
+> **Retroactive note (pivot to risk-analysis workspace):** Phase 1 was originally
+> framed around a "forecasting journal." Verdict's product framing has since shifted
+> to a forecasting-and-risk-analysis workspace for FDA approval decisions
+> (see `SPEC.md`). Phase 1's deliverables — event lifecycle, forecast capture,
+> resolution, the Brier scoring module, and the single-cohort calibration dashboard
+> — are still correct and are still the spine the workspace builds on. The pure
+> `Decimal` Brier math in `apps/api/crates/api/src/scoring.rs` is reused per
+> cohort (user / LLM / market) in [Phase 3 PR F](phase-3.md). The
+> single-user assumption and the Clerk-stub user are still valid; multi-tenant is
+> still out of scope. No backfill work is required against Phase 1 from the pivot.
+
 Phase 1 closes the loop from forecast capture through resolution, scoring, and a calibration dashboard on Postgres + Axum + Next.js (see `SPEC.md`). This document splits work into small mergeable PRs (target roughly 100–300 LOC each).
 
 Shipped PRs (1–3) summarize what landed in-repo. Remaining PRs (4–9) are implementation sketches and sequencing notes—not binding line counts.

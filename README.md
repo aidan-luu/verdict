@@ -1,17 +1,25 @@
 # Verdict
 
-A forecasting journal for FDA drug approval decisions. The user logs a
-probability estimate on an upcoming PDUFA decision, the system tracks the
-forecast through resolution, and surfaces calibration metrics (Brier score,
-reliability diagram) along with comparison against market-implied probabilities
-from Polymarket and Kalshi.
+A forecasting and risk-analysis workspace for FDA drug approval decisions.
+For each upcoming PDUFA decision, the system surfaces structured context — a
+historical reference class, market-implied probabilities, an optional LLM
+analyst memo, and an optional decomposition tool — and helps a human
+forecaster reason rigorously. The user's forecast is captured and, after
+resolution, scored. Calibration is measured **comparatively** on the same
+events for three sources of probability: the user, the LLM analyst, and the
+prediction market.
+
+The system does not predict outcomes. It surfaces context, captures human
+judgment, and measures how well each source actually does over time.
 
 ## Why
 
-Calibration is the answer to one question: when a forecaster says 70%, do
-events in that bucket actually happen 70% of the time? Verdict measures that
-across a narrow domain (FDA decisions) and benchmarks the answer against
-prediction markets on the same events.
+Calibration ("when this forecaster says 70%, do events in that bucket happen
+70% of the time?") is the right measure of forecasting quality, but it is
+only meaningful when the forecaster has done real work on each question.
+Verdict gives a forecaster the same desk an FDA analyst would want, then
+measures how well each source of probability — including the user — actually
+does over resolved events.
 
 ## Stack
 
@@ -25,7 +33,11 @@ prediction markets on the same events.
 
 ## Status
 
-Phase 1 — spine. See `SPEC.md` for full scope and phase definitions.
+Phase 1 (spine) shipped; Phase 2 (FDA briefing ingestion via Gemini) in flight;
+Phase 3 (risk-analysis workspace pivot — reference class, LLM analyst memo,
+decomposition, market prices, comparative calibration) planned in
+[`docs/plans/phase-3.md`](docs/plans/phase-3.md). See `SPEC.md` for full scope
+and phase definitions.
 
 ## Repository contents
 

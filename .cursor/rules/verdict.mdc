@@ -38,14 +38,28 @@ Explain non-obvious idioms inline with a one-sentence comment.
 Prefer clarity over cleverness.
 Surface borrow-checker workarounds rather than hiding them.
 
+## Product framing
+Verdict is a forecasting and risk-analysis workspace for FDA drug approval
+decisions. It surfaces structured context (historical reference class,
+market prices, LLM analyst memo, decomposition) and captures user
+forecasts. It never produces an authoritative forecast on behalf of the
+user. LLM estimates, market prices, and reference-class base rates are
+inputs to the user's reasoning, measured comparatively against the user
+over resolved events.
+
 ## Out of scope (do not propose, do not build)
 Multi-tenant, notifications, mobile app, non-FDA event categories,
-"AI probability suggestions," real-time / WebSockets, native PDF rendering.
+authoritative AI predictions (LLM probability estimates are stored and
+measured, never presented as "the answer"), real-time / WebSockets,
+native PDF rendering.
 
 ## Phases
-P1: spine (Rust+TS demo with manual data and calibration).
-P2: LLM ingestion of FDA briefing PDFs.
-P3: Polymarket / Kalshi market price comparison.
+P1: spine (Rust+TS demo with manual data and single-cohort calibration). Shipped.
+P2: LLM ingestion of FDA briefing PDFs into `events`.
+P3: risk-analysis workspace pivot — openFDA historical dataset,
+    reference-class matching, LLM analyst memo, optional decomposition,
+    Polymarket/Kalshi market prices, comparative calibration (user / LLM /
+    market) with bootstrap CIs. Plan in `docs/plans/phase-3.md`.
 P4: polish (optional).
 
 PR titles start with the phase tag.

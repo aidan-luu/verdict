@@ -1,5 +1,18 @@
 # Phase 2 — PR breakdown
 
+> **Retroactive note (pivot to risk-analysis workspace):** Phase 2 was originally
+> the only LLM surface in Verdict. Under the pivot (see `SPEC.md` and
+> [docs/plans/phase-3.md](phase-3.md)), Phase 2's Gemini pipeline stays as the
+> **briefing-metadata ingestion path** — it produces clean `events` rows from
+> FDA briefing PDFs and nothing more. The **LLM analyst memo** (efficacy,
+> safety, regulatory precedent, AdCom posture, key risks, probability range +
+> point estimate) is a different artifact and is introduced in Phase 3 PR C as
+> a separate service writing to a new `llm_analyst_memo` table plus a paired
+> `llm_forecast` row for calibration. Phase 2's PDF fetch, SSRF guards, and
+> validator/retry plumbing are reusable; its DTO and prompt are not, because the
+> Phase 3 memo is a structured analysis, not a metadata extraction. No work in
+> Phase 2 needs to be undone.
+
 Phase 2 adds LLM-assisted ingestion of FDA briefing PDFs: fetch by URL, call **Google Gemini**, validate structured output, and persist a clean `events` row (see `SPEC.md`). This document splits work into small mergeable PRs (target roughly 100–300 LOC each).
 
 These PRs are **implementation sketches and sequencing notes**—not binding line counts. Phase 2 completion is **local-first**: success does **not** depend on Fly.io or Vercel; verify against Docker Postgres + documented manual checks on real FDA.gov PDFs.
