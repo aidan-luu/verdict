@@ -2,7 +2,7 @@
 -- (drug/drugsfda) and optionally enriched via LLM or manual review.
 -- See docs/plans/phase-3.md PR A and SPEC.md data model.
 
-CREATE TABLE historical_event (
+CREATE TABLE IF NOT EXISTS historical_event (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- e.g. "NDA022264" / "BLA761306"; natural key for idempotent upsert.
@@ -69,9 +69,9 @@ CREATE TABLE historical_event (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX historical_event_indication_area_idx
+CREATE INDEX IF NOT EXISTS historical_event_indication_area_idx
     ON historical_event (indication_area);
-CREATE INDEX historical_event_enrichment_status_idx
+CREATE INDEX IF NOT EXISTS historical_event_enrichment_status_idx
     ON historical_event (enrichment_status);
-CREATE INDEX historical_event_approval_date_idx
+CREATE INDEX IF NOT EXISTS historical_event_approval_date_idx
     ON historical_event (approval_date);

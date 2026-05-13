@@ -10,6 +10,9 @@
 //! some unrelated SUPPL inside the same record matched the date. See
 //! `docs/historical_events_curation.md`.
 
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::path::Path;
 use std::time::Duration;
 
 use chrono::NaiveDate;
@@ -388,6 +391,23 @@ pub struct ApprovalWindow {
     pub to: NaiveDate,
 }
 
+/// Builds the `search` query parameter for `drug/drugsfda` pagination (NDA/BLA, ORIG+AP, date window).
+///
+/// openFDA uses Elasticsearch `query_string`; inclusive ranges must use `[low TO high]` with
+/// spaces around `TO`. Using `+TO+` inside the brackets yields `parse_exception` (HTTP 500).
+pub fn drugsfda_approval_search_query(window: ApprovalWindow) -> String {
+    let from = window.from.format("%Y%m%d").to_string();
+    let to = window.to.format("%Y%m%d").to_string();
+    // openFDA uses Elasticsearch `query_string`. Prefer explicit `AND` / `OR` with spaces
+    // to avoid ambiguity around `+` encoding/decoding in query parameters.
+    format!(
+        "(application_number:NDA* OR application_number:BLA*) AND \
+submissions.submission_type:ORIG AND \
+submissions.submission_status:AP AND \
+submissions.submission_status_date:[{from} TO {to}]"
+    )
+}
+
 /// Map one openFDA record to either an upsert row or a structured skip.
 /// Note that this is a pure function: no I/O.
 pub fn map_record(record: &DrugsFdaRecord, window: ApprovalWindow) -> MapOutcome {
@@ -649,14 +669,37 @@ impl OpenFdaClient {
             )));
         }
 
-        let search = format!(
-            "(application_number:NDA*+application_number:BLA*)+AND+\
-             submissions.submission_type:ORIG+AND+\
-             submissions.submission_status:AP+AND+\
-             submissions.submission_status_date:[{from}+TO+{to}]",
-            from = window.from.format("%Y%m%d"),
-            to = window.to.format("%Y%m%d"),
-        );
+        let search = drugsfda_approval_search_query(window);
+
+        // #region agent log
+        {
+            let log_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../debug-2df113.log");
+            let ts = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_millis());
+            let payload = serde_json::json!({
+                "sessionId": "2df113",
+                "runId": "post-fix",
+                "hypothesisId": "H1-range-syntax",
+                "location": "openfda.rs:search_drugsfda",
+                "message": "constructed drugsfda search",
+                "data": {
+                    "search_len": search.len(),
+                    "search": search.as_str(),
+                    "bytes_40_55": search.as_bytes().get(40..55).map(|b| String::from_utf8_lossy(b).into_owned()),
+                },
+                "timestamp": ts,
+            });
+            if let Ok(mut f) = OpenOptions::new()
+                .create(true)
+                .append(true)
+                .write(true)
+                .open(log_path)
+            {
+                let _ = writeln!(f, "{}", payload);
+            }
+        }
+        // #endregion
 
         let url = format!("{}{}", self.config.base_url, DRUGSFDA_PATH);
         let response = self
@@ -747,6 +790,23 @@ mod tests {
             from: NaiveDate::from_ymd_opt(2010, 1, 1).expect("date"),
             to: NaiveDate::from_ymd_opt(2026, 12, 31).expect("date"),
         }
+    }
+
+    #[test]
+    fn drugsfda_search_range_uses_spaced_to_not_plus_wrapped_to() {
+        let window = ApprovalWindow {
+            from: NaiveDate::from_ymd_opt(2010, 1, 1).expect("date"),
+            to: NaiveDate::from_ymd_opt(2026, 5, 13).expect("date"),
+        };
+        let query = drugsfda_approval_search_query(window);
+        assert!(
+            query.contains("[20100101 TO 20260513]"),
+            "expected Lucene inclusive range with spaces around TO, got {query:?}"
+        );
+        assert!(
+            !query.contains("+TO+"),
+            "+TO+ inside a range breaks the query_string parser, got {query:?}"
+        );
     }
 
     #[test]
