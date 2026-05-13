@@ -58,6 +58,11 @@ pub const PRIMARY_ENDPOINT_TYPES: &[&str] = &[
 
 pub const ADVISORY_COMMITTEE_VOTES: &[&str] = &["favorable", "mixed", "unfavorable"];
 
+/// Application-type vocabulary. The DB CHECK constraints on both
+/// `historical_event.application_type` and `events.application_type`
+/// enforce this set; reuse the constant for Rust-side validation.
+pub const APPLICATION_TYPES: &[&str] = &["NDA", "BLA", "ANDA", "other"];
+
 /// Default LLM-confidence threshold per field during enrichment.
 pub const DEFAULT_ENRICHMENT_CONFIDENCE_THRESHOLD: f32 = 0.7;
 
@@ -690,12 +695,7 @@ impl OpenFdaClient {
                 },
                 "timestamp": ts,
             });
-            if let Ok(mut f) = OpenOptions::new()
-                .create(true)
-                .append(true)
-                .write(true)
-                .open(log_path)
-            {
+            if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
                 let _ = writeln!(f, "{}", payload);
             }
         }

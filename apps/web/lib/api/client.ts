@@ -10,6 +10,8 @@ import {
   type Event,
   type Forecast,
   ingestFdaBriefingInputSchema,
+  referenceClassResponseSchema,
+  type ReferenceClassResponse,
   scoreSummarySchema,
   type ScoreSummary
 } from "../validators";
@@ -112,6 +114,42 @@ export async function fetchScoreSummary(): Promise<ScoreSummary> {
 
   const json = await response.json();
   return scoreSummarySchema.parse(json);
+}
+
+export async function fetchEvent(eventId: string): Promise<Event> {
+  const response = await fetch(`${getApiBaseUrl()}/events/${eventId}`, {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.status, await readApiErrorMessage(response));
+  }
+
+  const json = await response.json();
+  return eventSchema.parse(json);
+}
+
+export async function fetchReferenceClass(
+  eventId: string,
+  k = 20
+): Promise<ReferenceClassResponse> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/events/${eventId}/reference_class?k=${k}`,
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      cache: "no-store"
+    }
+  );
+
+  if (!response.ok) {
+    throw new ApiError(response.status, await readApiErrorMessage(response));
+  }
+
+  const json = await response.json();
+  return referenceClassResponseSchema.parse(json);
 }
 
 export async function ingestFromFdaBriefing(pdfUrl: string): Promise<Event> {

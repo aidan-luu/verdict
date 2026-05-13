@@ -1,0 +1,86 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id,\n            application_number,\n            drug_name,\n            sponsor_name,\n            application_type,\n            approval_date,\n            indication_area,\n            primary_endpoint_type,\n            advisory_committee_held,\n            advisory_committee_vote,\n            decision_outcome,\n            enrichment_status\n        FROM historical_event\n        WHERE enrichment_status <> 'structured_only'\n        ORDER BY approval_date DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "application_number",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "drug_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "sponsor_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "application_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "approval_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 6,
+        "name": "indication_area",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "primary_endpoint_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "advisory_committee_held",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "advisory_committee_vote",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "decision_outcome",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "enrichment_status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "4879c2b87c21021d78b17de7c8a0af34942fac0e7e7f055f52b88eb44ae74632"
+}

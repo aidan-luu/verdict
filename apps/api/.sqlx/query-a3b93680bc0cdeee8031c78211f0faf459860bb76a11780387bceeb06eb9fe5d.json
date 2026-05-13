@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO events (\n                title, kind, drug_name, sponsor, indication, decision_date, status,\n                indication_area, application_type, primary_endpoint_type, advisory_committee_held\n            )\n            VALUES (\n                'Onco PDUFA', 'fda_pdufa', 'OncoDrug', 'OncoSponsor', 'Onco', '2026-12-01', 'upcoming',\n                'oncology', 'NDA', 'overall_survival', true\n            )\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a3b93680bc0cdeee8031c78211f0faf459860bb76a11780387bceeb06eb9fe5d"
+}

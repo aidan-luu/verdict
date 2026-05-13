@@ -18,11 +18,76 @@ export const eventSchema = z.object({
   advisory_committee_date: z.string().nullable().optional(),
   primary_endpoint: z.string().nullable().optional(),
   advisory_committee_vote: z.string().nullable().optional(),
-  source_url: z.string().nullable().optional()
+  source_url: z.string().nullable().optional(),
+  // Phase 3 PR B: controlled-vocab features used by the reference-class matcher.
+  indication_area: z.string().nullable().optional(),
+  application_type: z.string().nullable().optional(),
+  primary_endpoint_type: z.string().nullable().optional(),
+  advisory_committee_held: z.boolean().nullable().optional()
 });
 
 export const eventListSchema = z.array(eventSchema);
 export type Event = z.infer<typeof eventSchema>;
+
+// Phase 3 PR B: reference-class panel.
+export const matchReasonSchema = z.enum([
+  "indication_area",
+  "application_type",
+  "primary_endpoint_type",
+  "advisory_committee_held"
+]);
+export type MatchReason = z.infer<typeof matchReasonSchema>;
+
+export const baseRateAbsenceReasonSchema = z.enum([
+  "approval_only_bias",
+  "insufficient_sample"
+]);
+export type BaseRateAbsenceReason = z.infer<typeof baseRateAbsenceReasonSchema>;
+
+export const referenceClassHitSchema = z.object({
+  historical_event_id: z.uuid(),
+  application_number: z.string(),
+  drug_name: z.string(),
+  sponsor_name: z.string(),
+  application_type: z.string(),
+  approval_date: z.string(),
+  indication_area: z.string().nullable().optional(),
+  primary_endpoint_type: z.string().nullable().optional(),
+  advisory_committee_held: z.boolean().nullable().optional(),
+  advisory_committee_vote: z.string().nullable().optional(),
+  decision_outcome: z.string(),
+  enrichment_status: z.string(),
+  similarity_score: z.number(),
+  match_reasons: z.array(matchReasonSchema)
+});
+export type ReferenceClassHit = z.infer<typeof referenceClassHitSchema>;
+
+export const referenceClassAggregateSchema = z.object({
+  sample_size: z.number().int().nonnegative(),
+  approval_count: z.number().int().nonnegative(),
+  crl_count: z.number().int().nonnegative(),
+  base_rate: z.number().nullable().optional(),
+  base_rate_absence_reason: baseRateAbsenceReasonSchema.nullable().optional(),
+  enrichment_coverage_pct: z.number().int().min(0).max(100)
+});
+export type ReferenceClassAggregate = z.infer<typeof referenceClassAggregateSchema>;
+
+export const currentEventFeaturesSchema = z.object({
+  indication_area: z.string().nullable().optional(),
+  application_type: z.string().nullable().optional(),
+  primary_endpoint_type: z.string().nullable().optional(),
+  advisory_committee_held: z.boolean().nullable().optional(),
+  has_any_feature: z.boolean()
+});
+export type CurrentEventFeatures = z.infer<typeof currentEventFeaturesSchema>;
+
+export const referenceClassResponseSchema = z.object({
+  event_id: z.uuid(),
+  current_features: currentEventFeaturesSchema,
+  matches: z.array(referenceClassHitSchema),
+  aggregate: referenceClassAggregateSchema
+});
+export type ReferenceClassResponse = z.infer<typeof referenceClassResponseSchema>;
 
 export const createForecastInputSchema = z.object({
   eventId: z.uuid(),

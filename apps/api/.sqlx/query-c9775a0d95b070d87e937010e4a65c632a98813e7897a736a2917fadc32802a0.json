@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            id,\n            title,\n            kind,\n            drug_name,\n            sponsor,\n            indication,\n            decision_date,\n            advisory_committee_date,\n            primary_endpoint,\n            advisory_committee_vote,\n            status,\n            source_url\n        FROM events\n        ORDER BY decision_date ASC\n        ",
+  "query": "\n        SELECT\n            id,\n            title,\n            kind,\n            drug_name,\n            sponsor,\n            indication,\n            decision_date,\n            advisory_committee_date,\n            primary_endpoint,\n            advisory_committee_vote,\n            status,\n            source_url,\n            indication_area,\n            application_type,\n            primary_endpoint_type,\n            advisory_committee_held\n        FROM events\n        WHERE id = $1\n        ",
   "describe": {
     "columns": [
       {
@@ -62,10 +62,32 @@
         "ordinal": 11,
         "name": "source_url",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "indication_area",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "application_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "primary_endpoint_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "advisory_committee_held",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Uuid"
+      ]
     },
     "nullable": [
       false,
@@ -79,8 +101,12 @@
       true,
       true,
       false,
+      true,
+      true,
+      true,
+      true,
       true
     ]
   },
-  "hash": "b3f1db2e99c253f2048f749fb429aa07f0103b841a6625c6a658ad9e6a482666"
+  "hash": "c9775a0d95b070d87e937010e4a65c632a98813e7897a736a2917fadc32802a0"
 }

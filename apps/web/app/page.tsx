@@ -67,7 +67,12 @@ export default async function HomePage() {
             <ul className="mt-3 list-disc space-y-1 pl-5">
               {events.map((event) => (
                 <li key={event.id}>
-                  <span className="font-medium">{event.title}</span>{" "}
+                  <Link
+                    className="font-medium text-blue-700 underline"
+                    href={`/events/${event.id}`}
+                  >
+                    {event.title}
+                  </Link>{" "}
                   <span className="text-sm text-gray-600">({event.decision_date})</span>
                 </li>
               ))}

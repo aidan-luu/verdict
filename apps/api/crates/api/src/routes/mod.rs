@@ -1,4 +1,5 @@
 pub mod admin;
 pub mod events;
 pub mod health;
+pub mod reference_class;
 pub mod scoring;

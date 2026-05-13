@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO historical_event (\n                    application_number, drug_name, sponsor_name, application_type,\n                    approval_date, decision_outcome, enrichment_status, source,\n                    indication_area, primary_endpoint_type, advisory_committee_held\n                )\n                VALUES (\n                    $1, $2, 'TestSponsor', 'NDA',\n                    '2024-01-01', 'approved', 'llm_enriched', 'openfda',\n                    'oncology', 'overall_survival', true\n                )\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a5adba8949ef2c474cb89069bd6ba8faa275e043820ffa79cdda0c525cf1112f"
+}

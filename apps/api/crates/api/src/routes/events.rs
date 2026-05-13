@@ -12,6 +12,7 @@ use validator::Validate;
 
 use crate::ingest::gemini_briefing::derive_briefing_event_title;
 use crate::ingest::pdf_fetch::fetch_pdf_bytes;
+use crate::services::openfda::{APPLICATION_TYPES, INDICATION_AREAS, PRIMARY_ENDPOINT_TYPES};
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize, Validate)]
@@ -30,6 +31,15 @@ pub struct CreateEventRequest {
     pub primary_endpoint: Option<String>,
     #[validate(length(min = 1))]
     pub advisory_committee_vote: Option<String>,
+    // Phase 3 PR B: controlled-vocab features used by the
+    // reference-class matcher. All optional; nulls degrade gracefully.
+    #[validate(custom(function = "validate_optional_indication_area"))]
+    pub indication_area: Option<String>,
+    #[validate(custom(function = "validate_optional_application_type"))]
+    pub application_type: Option<String>,
+    #[validate(custom(function = "validate_optional_primary_endpoint_type"))]
+    pub primary_endpoint_type: Option<String>,
+    pub advisory_committee_held: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -71,6 +81,11 @@ pub struct EventResponse {
     pub advisory_committee_vote: Option<String>,
     pub status: String,
     pub source_url: Option<String>,
+    // Phase 3 PR B: controlled-vocab features used by the reference-class matcher.
+    pub indication_area: Option<String>,
+    pub application_type: Option<String>,
+    pub primary_endpoint_type: Option<String>,
+    pub advisory_committee_held: Option<bool>,
 }
 
 #[derive(Debug, Serialize)]
@@ -112,10 +127,14 @@ pub async fn create_event_handler(
             advisory_committee_date,
             primary_endpoint,
             advisory_committee_vote,
+            indication_area,
+            application_type,
+            primary_endpoint_type,
+            advisory_committee_held,
             status,
             source_url
         )
-        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, $6, $7, $8, 'upcoming', NULL)
+        VALUES ($1, 'fda_pdufa', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'upcoming', NULL)
         RETURNING
             id,
             title,
@@ -128,7 +147,11 @@ pub async fn create_event_handler(
             primary_endpoint,
             advisory_committee_vote,
             status,
-            source_url
+            source_url,
+            indication_area,
+            application_type,
+            primary_endpoint_type,
+            advisory_committee_held
         "#,
         payload.title,
         payload.drug_name,
@@ -137,12 +160,54 @@ pub async fn create_event_handler(
         payload.decision_date,
         payload.advisory_committee_date,
         payload.primary_endpoint,
-        payload.advisory_committee_vote
+        payload.advisory_committee_vote,
+        payload.indication_area,
+        payload.application_type,
+        payload.primary_endpoint_type,
+        payload.advisory_committee_held,
     )
     .fetch_one(&state.pool)
     .await?;
 
     Ok((StatusCode::CREATED, Json(event)))
+}
+
+pub async fn get_event_handler(
+    State(state): State<AppState>,
+    Path(event_id): Path<Uuid>,
+) -> Result<Json<EventResponse>, AppError> {
+    let event = sqlx::query_as!(
+        EventResponse,
+        r#"
+        SELECT
+            id,
+            title,
+            kind,
+            drug_name,
+            sponsor,
+            indication,
+            decision_date,
+            advisory_committee_date,
+            primary_endpoint,
+            advisory_committee_vote,
+            status,
+            source_url,
+            indication_area,
+            application_type,
+            primary_endpoint_type,
+            advisory_committee_held
+        FROM events
+        WHERE id = $1
+        "#,
+        event_id
+    )
+    .fetch_optional(&state.pool)
+    .await?;
+
+    match event {
+        Some(event) => Ok(Json(event)),
+        None => Err(AppError::NotFound("event not found".to_string())),
+    }
 }
 
 pub async fn create_forecast_handler(
@@ -212,7 +277,11 @@ pub async fn list_events_handler(
                 primary_endpoint,
                 advisory_committee_vote,
                 status,
-                source_url
+                source_url,
+                indication_area,
+                application_type,
+                primary_endpoint_type,
+                advisory_committee_held
             FROM events
             WHERE status = $1
             ORDER BY decision_date ASC
@@ -240,7 +309,11 @@ pub async fn list_events_handler(
             primary_endpoint,
             advisory_committee_vote,
             status,
-            source_url
+            source_url,
+            indication_area,
+            application_type,
+            primary_endpoint_type,
+            advisory_committee_held
         FROM events
         ORDER BY decision_date ASC
         "#
@@ -296,7 +369,11 @@ pub async fn ingest_from_fda_briefing_handler(
             primary_endpoint,
             advisory_committee_vote,
             status,
-            source_url
+            source_url,
+            indication_area,
+            application_type,
+            primary_endpoint_type,
+            advisory_committee_held
         "#,
         title,
         extraction.drug_name,
@@ -392,6 +469,29 @@ fn validate_resolution_outcome(value: &str) -> Result<(), validator::ValidationE
     }
 
     Err(validator::ValidationError::new("resolution_outcome"))
+}
+
+fn validate_optional_indication_area(value: &str) -> Result<(), validator::ValidationError> {
+    if INDICATION_AREAS.contains(&value) {
+        return Ok(());
+    }
+    Err(validator::ValidationError::new("indication_area_vocab"))
+}
+
+fn validate_optional_application_type(value: &str) -> Result<(), validator::ValidationError> {
+    if APPLICATION_TYPES.contains(&value) {
+        return Ok(());
+    }
+    Err(validator::ValidationError::new("application_type_vocab"))
+}
+
+fn validate_optional_primary_endpoint_type(value: &str) -> Result<(), validator::ValidationError> {
+    if PRIMARY_ENDPOINT_TYPES.contains(&value) {
+        return Ok(());
+    }
+    Err(validator::ValidationError::new(
+        "primary_endpoint_type_vocab",
+    ))
 }
 
 #[cfg(test)]

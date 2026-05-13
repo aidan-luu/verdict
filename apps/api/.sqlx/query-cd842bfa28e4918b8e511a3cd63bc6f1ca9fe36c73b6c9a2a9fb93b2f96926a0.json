@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id,\n            indication_area,\n            application_type,\n            primary_endpoint_type,\n            advisory_committee_held\n        FROM events\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "indication_area",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "application_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "primary_endpoint_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "advisory_committee_held",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "cd842bfa28e4918b8e511a3cd63bc6f1ca9fe36c73b6c9a2a9fb93b2f96926a0"
+}
